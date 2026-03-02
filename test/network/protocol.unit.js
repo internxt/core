@@ -7,7 +7,6 @@ const Protocol = require('../../lib/network/protocol');
 const Logger = require('kad').Logger;
 const KeyPair = require('../../lib/crypto-tools/keypair');
 const stream = require('readable-stream');
-const diskusage = require('diskusage');
 const constants = require('../../lib/constants');
 const StorageItem = require('../../lib/storage/item');
 const utils = require('../../lib/utils');
@@ -987,7 +986,6 @@ describe('Protocol', function() {
       };
       var shard = new stream.Writable({ write: () => null });
       shard.destroy = sinon.stub();
-      sandbox.stub(diskusage, 'check').callsArgWith(1, null, {available: 0});
       var proto = new Protocol({
         storagePath: '/tmp',
         network: {
@@ -1010,7 +1008,9 @@ describe('Protocol', function() {
           }
         }
       });
-      proto._network.bridges.set('hdkey', {});
+  // simulate disk full via network hook
+  proto._network._checkSpaceAvailable = sinon.stub().callsArgWith(1, null, {available: 0});
+  proto._network.bridges.set('hdkey', {});
       proto.handleMirror({
         contact: { nodeID: 'test' }
       }, function(err) {

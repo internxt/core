@@ -8,7 +8,6 @@ const crypto = require('crypto');
 const mkdirp = require('mkdirp');
 const rimraf = require('rimraf');
 const expect = require('chai').expect;
-const diskusage = require('diskusage');
 const EventEmitter = require('events').EventEmitter;
 const Contract = require('../../lib/contract');
 const KeyPair = require('../../lib/crypto-tools/keypair');
@@ -530,7 +529,7 @@ describe('FarmerInterface', function() {
     afterEach(() => sandbox.restore());
 
     it('will log with error message', function() {
-      const check = sandbox.stub(diskusage, 'check')
+      const check = sandbox.stub(FarmerInterface.prototype, '_checkSpaceAvailable')
             .callsArgWith(1, new Error('test'));
 
       const logger = kad.Logger(0);
@@ -558,7 +557,7 @@ describe('FarmerInterface', function() {
       const info = {
         available: 100
       };
-      const check = sandbox.stub(diskusage, 'check')
+      const check = sandbox.stub(FarmerInterface.prototype, '_checkSpaceAvailable')
             .callsArgWith(1, null, info);
 
       farmer = new FarmerInterface({
@@ -583,7 +582,7 @@ describe('FarmerInterface', function() {
       const info = {
         available: 1000 * 1024 * 1024
       };
-      const check = sandbox.stub(diskusage, 'check')
+      const check = sandbox.stub(FarmerInterface.prototype, '_checkSpaceAvailable')
             .callsArgWith(1, null, info);
 
       farmer = new FarmerInterface({
@@ -1581,13 +1580,13 @@ describe('FarmerInterface#Negotiator', function() {
       available: 512000
     };
     let noSpaceLeft = sinon.stub();
-    sandbox.stub(diskusage, 'check').callsArgWith(1, null, info);
     FarmerInterface.Negotiator.call({
       _options: {
         storagePath: '/tmp'
       },
       _logger: kad.Logger(0),
       isBridgeConnected: sinon.stub().returns(true),
+      _checkSpaceAvailable: sinon.stub().callsArgWith(1, null, info),
       _renterWhitelist: [
         'xpub6AHweYHAxk1EhJSBctQD1nLWPog6Sy2eTpKQLExR1hfzTyyZQWvU4EYNXv1NJN7' +
           'GpLYXnDLt4PzN874g6zSjAQdFCHZN7U7nbYKYVDUzD42'

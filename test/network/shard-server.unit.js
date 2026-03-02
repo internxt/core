@@ -6,7 +6,6 @@ const crypto = require('crypto');
 const storj = require('../../');
 const expect = require('chai').expect;
 const sinon = require('sinon');
-const diskusage = require('diskusage');
 const HDKey = require('hdkey');
 const mkdirp = require('mkdirp');
 const rimraf = require('rimraf');
@@ -329,7 +328,6 @@ describe('ShardServer', function() {
       }
       item.getContract = sinon.stub().returns(contract);
       sandbox.stub(manager, 'load').callsArgWith(1, null, item);
-      sandbox.stub(diskusage, 'check').callsArgWith(1, null, { available: 0 });
       server = new ShardServer({
         storagePath: tmpPath,
         storageManager: manager,
@@ -343,6 +341,8 @@ describe('ShardServer', function() {
           storagePath: '/tmp'
         }
       }
+      // simulate disk full via the farmerInterface hook used by ShardServer
+      server.farmerInterface._checkSpaceAvailable = sandbox.stub().callsArgWith(1, null, { available: 0 });
       server.farmerInterface.bridges = new Map();
       server.farmerInterface.bridges.set('hdkey', {});
       let contact = {
